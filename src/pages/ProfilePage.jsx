@@ -1,0 +1,125 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext.jsx';
+
+export default function ProfilePage() {
+  const navigate = useNavigate();
+  const { user, logout, updateProfile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  const handleSave = () => {
+    updateProfile({ name, email, phone, address });
+    setIsEditing(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  return (
+    <div className="profile-page">
+      <div className="profile-container">
+        <div className="profile-card">
+          <div className="profile-header">
+            <h1>My Profile</h1>
+            <button onClick={handleLogout} className="logout-button">
+              Logout
+            </button>
+          </div>
+
+          <div className="profile-content">
+            {!isEditing ? (
+              <>
+                <div className="profile-info">
+                  <div className="info-row">
+                    <label>Name</label>
+                    <p>{user?.name}</p>
+                  </div>
+                  <div className="info-row">
+                    <label>Email</label>
+                    <p>{user?.email}</p>
+                  </div>
+                  <div className="info-row">
+                    <label>Phone</label>
+                    <p>{user?.phone || 'Not added'}</p>
+                  </div>
+                  <div className="info-row">
+                    <label>Address</label>
+                    <p>{user?.address || 'Not added'}</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsEditing(true)} className="primary-button">
+                  Edit Profile
+                </button>
+              </>
+            ) : (
+              <>
+                <form className="profile-form">
+                  <div className="form-group">
+                    <label htmlFor="name">Name</label>
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="email">Email</label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone</label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      placeholder="Add your phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="address">Address</label>
+                    <textarea
+                      id="address"
+                      placeholder="Add your address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                    />
+                  </div>
+                </form>
+
+                <div className="form-actions">
+                  <button onClick={handleSave} className="primary-button">
+                    Save Changes
+                  </button>
+                  <button onClick={() => setIsEditing(false)} className="secondary-button">
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
