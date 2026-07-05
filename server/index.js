@@ -57,6 +57,17 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// Map category names from form to database format
+const mapCategory = (cat) => {
+  const categoryMap = {
+    'Tops': 'top',
+    'Dresses': 'dress',
+    'Ethnic Wear': 'ethnic-wear',
+    'Bottoms': 'bottom'
+  };
+  return categoryMap[cat] || cat.toLowerCase();
+};
+
 app.post('/api/products', async (req, res) => {
   const { name, price, category, image, description, tags } = req.body;
   if (!name || price === undefined || !category) {
@@ -67,7 +78,7 @@ app.post('/api/products', async (req, res) => {
     const product = await createProduct({
       name,
       price: Number(price),
-      category,
+      category: mapCategory(category),
       image: image || 'https://via.placeholder.com/900x600?text=Product',
       description: description || 'A stylish product made for modern users.',
       tags: tags || ['featured'],

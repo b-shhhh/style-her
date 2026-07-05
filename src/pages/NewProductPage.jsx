@@ -41,8 +41,8 @@ export default function NewProductPage() {
         throw new Error(result.message || 'Unable to add product');
       }
 
-      const newProduct = await response.json();
-      navigate(`/product/${newProduct.id}`);
+const newProduct = await response.json();
+      navigate(`/product/${newProduct._id}`);
     } catch (error) {
       setStatus(error.message);
     }
