@@ -14,14 +14,16 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const addToCart = (product, quantity = 1) => {
+    // MongoDB uses _id, convert to id for consistency
+    const productWithId = { ...product, id: product._id || product.id };
     setItems((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find((item) => item.id === productWithId.id);
       if (existing) {
         return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === productWithId.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...current, { ...product, quantity }];
+      return [...current, { ...productWithId, quantity }];
     });
   };
 

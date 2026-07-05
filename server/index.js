@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct } from './mongoDb.js';
+import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct, initializeUserDb, createUser, getUserByEmail, getUserById, updateUser } from './mongoDb.js';
 import { createOrder, getOrder, initializeOrderDb, listOrders, updateOrderStatus } from './mongoDb.js';
 import { ObjectId } from 'mongodb';
 
@@ -266,6 +266,63 @@ const __dirname = path.dirname(__filename);
 const clientDist = path.join(__dirname, '../dist');
 const rootDir = path.join(__dirname, '..');
 
+// Authentication API endpoints
+app.post('/api/auth/register', async (req, res) => {
+  const { email, password, name } = req.body;
+  if (!email || !password || !name) {
+    return res.status(400).json({ message: 'Email, password, and name are required' });
+  }
+
+  try {
+    const existing = await getUserByEmail(email);
+    if (existing) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+    const user = await createUser({ email, password, name });
+    res.status(201).json({ id: user._id, email: user.email, name: user.name });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to register user' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+
+  try {
+    const user = await getUserByEmail(email);
+    if (!user || user.password !== password) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+    res.json({ id: user._id, email: user.email, name: user.name });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to login' });
+  }
+});
+
+app.put('/api/auth/profile', async (req, res) => {
+  const { userId, name, email, phone, address } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const user = await getUserById(new ObjectId(userId));
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    const updated = await updateUser(new ObjectId(userId), { name, email, phone, address });
+    res.json({ id: updated._id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
 // Serve static files from root (for stylerher.jpg)
 app.use(express.static(rootDir));
 // Serve static files from dist
@@ -277,6 +334,7 @@ app.get('*', (req, res) => {
 connectDb()
   .then(() => initializeDb())
   .then(() => initializeOrderDb())
+  .then(() => initializeUserDb())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);

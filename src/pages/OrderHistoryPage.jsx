@@ -44,12 +44,12 @@ export default function OrderHistoryPage() {
           </Link>
         </div>
 
-        {orders.length ? (
-          <div className="order-list">
-            {orders.map((order) => (
-              <div key={order.id} className="order-card">
-                <div>
-                  <p className="eyebrow">Order #{order.id}</p>
+         {orders.length ? (
+           <div className="order-list">
+             {orders.map((order) => (
+               <div key={order._id || order.id} className="order-card">
+                 <div>
+                   <p className="eyebrow">Order #{order._id || order.id}</p>
                   <h3>{order.payment_method === 'wallet' ? 'eSewa payment' : 'Cash on Delivery'}</h3>
                   <p>Status: <strong>{order.status.replace('_', ' ')}</strong></p>
                 </div>

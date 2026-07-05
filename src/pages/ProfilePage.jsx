@@ -10,15 +10,34 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
+  const [image, setImage] = useState(user?.image || '/stylerher.jpg');
+  const [imagePreview, setImagePreview] = useState(user?.image || '/stylerher.jpg');
 
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  const handleSave = () => {
-    updateProfile({ name, email, phone, address });
-    setIsEditing(false);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        setImage(result);
+        setImagePreview(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProfile({ name, email, phone, address, image });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+    }
   };
 
   const handleLogout = () => {
@@ -40,6 +59,9 @@ export default function ProfilePage() {
           <div className="profile-content">
             {!isEditing ? (
               <>
+                <div className="profile-image-section">
+                  <img src={user?.image || '/stylerher.jpg'} alt="Profile" className="profile-image" />
+                </div>
                 <div className="profile-info">
                   <div className="info-row">
                     <label>Name</label>
@@ -64,6 +86,13 @@ export default function ProfilePage() {
               </>
             ) : (
               <>
+                <div className="profile-image-section">
+                  <img src={imagePreview} alt="Profile" className="profile-image" />
+                  <label className="image-upload-label">
+                    Change Photo
+                    <input type="file" accept="image/*" onChange={handleImageChange} />
+                  </label>
+                </div>
                 <form className="profile-form">
                   <div className="form-group">
                     <label htmlFor="name">Name</label>

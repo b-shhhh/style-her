@@ -14,23 +14,46 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
-  const register = (email, password, name) => {
-    const newUser = { id: Date.now(), email, name, password, createdAt: new Date().toISOString() };
-    window.localStorage.setItem('styleher-user', JSON.stringify(newUser));
-    setUser(newUser);
-    return newUser;
+  const register = async (email, password, name, image) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, image }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'Registration failed');
+      }
+      const userData = await response.json();
+      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image };
+      window.localStorage.setItem('styleher-user', JSON.stringify(user));
+      setUser(user);
+      return user;
+    } catch (error) {
+      throw error;
+    }
   };
 
-  const login = (email, password) => {
-    const stored = window.localStorage.getItem('styleher-user');
-    if (stored) {
-      const userData = JSON.parse(stored);
-      if (userData.email === email && userData.password === password) {
-        setUser(userData);
-        return userData;
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'Login failed');
       }
+      const userData = await response.json();
+      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone, address: userData.address };
+      window.localStorage.setItem('styleher-user', JSON.stringify(user));
+      setUser(user);
+      return user;
+    } catch (error) {
+      return null;
     }
-    return null;
   };
 
   const logout = () => {
@@ -38,11 +61,26 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const updateProfile = (updatedData) => {
-    const updated = { ...user, ...updatedData };
-    window.localStorage.setItem('styleher-user', JSON.stringify(updated));
-    setUser(updated);
-    return updated;
+  const updateProfile = async (updatedData) => {
+    if (!user) return null;
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, ...updatedData }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'Profile update failed');
+      }
+      const updated = await response.json();
+      const user = { id: updated._id || updated.id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address, image: updated.image };
+      window.localStorage.setItem('styleher-user', JSON.stringify(user));
+      setUser(user);
+      return user;
+    } catch (error) {
+      throw error;
+    }
   };
 
   return (

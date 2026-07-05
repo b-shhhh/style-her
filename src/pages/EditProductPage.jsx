@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-const categories = ['Dresses', 'Accessories', 'Outerwear', 'Bottoms'];
+const categories = ['Tops', 'Dresses', 'Ethnic Wear', 'Bottoms'];
 
 export default function EditProductPage() {
   const { id } = useParams();

@@ -148,3 +148,40 @@ export const updateOrderStatus = async ({ id, status, payment_reference = null }
   );
   return await getOrder(id);
 };
+
+// Users operations
+export const initializeUserDb = async () => {
+  // MongoDB creates collections automatically on first insert
+  console.log('Users collection ready');
+};
+
+export const createUser = async ({ email, password, name, image }) => {
+  const db = getDb();
+  const result = await db.collection('users').insertOne({
+    email,
+    password,
+    name,
+    image: image || '/stylerher.jpg',
+    created_at: new Date().toISOString(),
+  });
+  return await getUserById(result.insertedId);
+};
+
+export const getUserByEmail = async (email) => {
+  const db = getDb();
+  return await db.collection('users').findOne({ email });
+};
+
+export const getUserById = async (id) => {
+  const db = getDb();
+  return await db.collection('users').findOne({ _id: id });
+};
+
+export const updateUser = async (id, updates) => {
+  const db = getDb();
+  await db.collection('users').updateOne(
+    { _id: id },
+    { $set: updates }
+  );
+  return await getUserById(id);
+};

@@ -47,14 +47,14 @@ export default function CartPage() {
         throw new Error(result.message || 'Unable to place order');
       }
 
-      const order = await response.json();
-      if (paymentMethod === 'wallet') {
-        setStatus('Opening eSewa wallet checkout...');
-        const paymentResponse = await fetch('/api/payments/esewa/initiate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: order.id }),
-        });
+       const order = await response.json();
+       if (paymentMethod === 'wallet') {
+         setStatus('Opening eSewa wallet checkout...');
+         const paymentResponse = await fetch('/api/payments/esewa/initiate', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ orderId: order._id || order.id }),
+         });
 
         if (!paymentResponse.ok) {
           const result = await paymentResponse.json();

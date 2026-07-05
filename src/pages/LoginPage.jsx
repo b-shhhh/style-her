@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -18,11 +18,15 @@ export default function LoginPage() {
       return;
     }
 
-    const user = login(email, password);
-    if (user) {
-      navigate('/home');
-    } else {
-      setError('Invalid email or password. Try registering first.');
+    try {
+      const user = await login(email, password);
+      if (user) {
+        navigate('/home');
+      } else {
+        setError('Invalid email or password. Try registering first.');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
     }
   };
 
