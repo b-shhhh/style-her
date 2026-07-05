@@ -37,12 +37,9 @@ function App() {
               <div className="main-content">
                 <Outlet />
               </div>
-              <div className="figma-bottom-bar">
-                <span>STYLE HER</span>
-                <span>New arrivals</span>
-                <span>Cart</span>
-                <span>Profile</span>
-              </div>
+               <footer className="figma-bottom-bar">
+                 <span>styleher@all right reserved</span>
+               </footer>
             </div>
           }
         >
