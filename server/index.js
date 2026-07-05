@@ -264,7 +264,11 @@ app.all('/api/payments/esewa/failure', async (req, res) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientDist = path.join(__dirname, '../dist');
+const rootDir = path.join(__dirname, '..');
 
+// Serve static files from root (for stylerher.jpg)
+app.use(express.static(rootDir));
+// Serve static files from dist
 app.use(express.static(clientDist));
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));

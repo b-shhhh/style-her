@@ -39,7 +39,7 @@ export default function RegisterPage() {
       <div className="auth-container">
         <div className="auth-visual signup">
           <p>STYLE HER</p>
-          <div className="auth-placeholder">IMG 1</div>
+          <img src="/stylerher.jpg" alt="Style Her" className="auth-image" />
         </div>
         <div className="auth-card">
           <h1 className="auth-title">Style Her Sign Up</h1>
