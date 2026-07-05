@@ -28,43 +28,68 @@ const parseCsvLine = (line) => {
   return result;
 };
 
+// Map product type to category
+const mapCategory = (productType) => {
+  const categoryMap = {
+    'Tops': 'top',
+    'Dress': 'dress',
+    'Dresses': 'dress',
+    'Ethnic Wear': 'ethnic-wear',
+    'Bottoms': 'bottom'
+  };
+  return categoryMap[productType] || productType.toLowerCase();
+};
+
+// Generate image URL based on product name
+const generateImageUrl = (name) => {
+  const seed = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  return `https://picsum.photos/seed/${seed}/500/650`;
+};
+
 const importCsv = async () => {
-  const csvPath = path.join(__dirname, '..', 'products_dataset.csv');
-  const csvContent = fs.readFileSync(csvPath, 'utf8');
-  const lines = csvContent.trim().split('\n');
-  
-  // Skip header line
-  const dataLines = lines.slice(1);
-  
-const products = dataLines.map(line => {
-    const [id, category, name, description, price, image] = parseCsvLine(line);
-    // Map CSV categories to match frontend expectations
-    const categoryMap = {
-      'Tops': 'top',
-      'Dresses': 'dress',
-      'Ethnic Wear': 'ethnic-wear',
-      'Bottoms': 'bottom'
-    };
-    return {
-      name,
-      price: Number(price),
-      category: categoryMap[category] || category.toLowerCase(),
-      image,
-      description,
-      tags: ['featured'],
-      created_at: new Date().toISOString(),
-    };
-  });
-  
+  const csvFiles = ['Tops.csv', 'Bottoms.csv', 'Dress.csv', 'EthnicWear.csv'];
+  const allProducts = [];
+
+  for (const csvFile of csvFiles) {
+    const csvPath = path.join(__dirname, '..', csvFile);
+    const csvContent = fs.readFileSync(csvPath, 'utf8');
+    const lines = csvContent.trim().split('\n');
+    
+    // Skip header line
+    const dataLines = lines.slice(1);
+    
+    const products = dataLines.map(line => {
+      const [brandName, details, sizes, mrp, sellPrice, discount, category, productType] = parseCsvLine(line);
+      
+      // Create product name from brand and details
+      const name = `${brandName} ${details}`.trim();
+      
+      // Use sellPrice as the price, fallback to MRP if sellPrice is empty
+      const price = sellPrice ? Number(sellPrice) : Number(mrp);
+      
+      return {
+        name,
+        price: price || 0,
+        category: mapCategory(productType),
+        image: generateImageUrl(name),
+        description: details,
+        tags: ['featured'],
+        created_at: new Date().toISOString(),
+      };
+    });
+    
+    allProducts.push(...products);
+  }
+
   const db = getDb();
   
   // Clear existing products
   await db.collection('products').deleteMany({});
   
   // Insert all products
-  if (products.length > 0) {
-    await db.collection('products').insertMany(products);
-    console.log(`Imported ${products.length} products to MongoDB`);
+  if (allProducts.length > 0) {
+    await db.collection('products').insertMany(allProducts);
+    console.log(`Imported ${allProducts.length} products to MongoDB`);
   }
   
   process.exit(0);

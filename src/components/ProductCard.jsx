@@ -9,13 +9,10 @@ export default function ProductCard({ product }) {
 
   return (
     <Link to={`/product/${productId}`} className="product-card">
-      <div className={`product-art ${tileClass}`}>
-        <span>IMG {productId}</span>
-        <span className="heart-dot">♡</span>
-      </div>
+      <img src={product.image} alt={product.name} className="product-image" />
       <div className="product-card-content">
-        <h3>Product Name</h3>
-        <p>{product.name}</p>
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
         <span className="product-price">${Number(product.price).toFixed(2)}</span>
         <span className="add-dot">+</span>
       </div>
