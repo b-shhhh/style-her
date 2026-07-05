@@ -60,7 +60,7 @@ export default function CategoryPage({ category, title }) {
           ) : products.length ? (
             <div className="product-grid figma-grid-large">
               {products.concat(products).slice(0, 8).map((product, index) => (
-                <ProductCard key={`${product.id}-${index}`} product={{ ...product, id: index + 1 }} />
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
           ) : (

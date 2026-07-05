@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const categories = ['Dresses', 'Accessories', 'Outerwear', 'Bottoms'];
+const categories = ['Dresses', 'Tops', 'Bottoms', 'Ethnic Wear'];
 
 export default function NewProductPage() {
   const [form, setForm] = useState({
