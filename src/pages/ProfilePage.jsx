@@ -133,7 +133,7 @@ export default function ProfilePage() {
                     <input type="file" accept="image/*" onChange={handleImageChange} />
                   </label>
                 </div>
-                <form className="profile-form">
+                <form className="profile-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                   <div className="form-group">
                     <label htmlFor="name">Name</label>
                     <input

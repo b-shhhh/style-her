@@ -51,24 +51,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const handleDelete = async () => {
-    if (!window.confirm('Delete this product from the catalog?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/products/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Unable to delete product');
-      }
-      navigate('/');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   const handleAddToCart = () => {
     addToCart(product, 1);
   };
@@ -81,7 +63,7 @@ export default function ProductDetailPage() {
           <h2>{product.name}</h2>
           <p className="hero-description">{product.description}</p>
           <div className="price-row">
-            <span className="price">${Number(product.price).toFixed(2)}</span>
+            <span className="price">₹{Number(product.price).toFixed(2)}</span>
             <button className="primary-button" type="button" onClick={handleAddToCart}>
               Add to bag
             </button>
@@ -97,12 +79,6 @@ export default function ProductDetailPage() {
             <Link className="secondary-button" to="/home">
               Back to shop
             </Link>
-            <Link className="secondary-button" to={`/product/${id}/edit`}>
-              Edit product
-            </Link>
-            <button className="secondary-button delete-button" type="button" onClick={handleDelete}>
-              Delete product
-            </button>
           </div>
         </div>
         <img className="detail-image" src={product.image} alt={product.name} />
