@@ -40,6 +40,15 @@ const userSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now }
 });
 
+// Product model
+export const Product = mongoose.model('Product', productSchema);
+
+// Order model
+export const Order = mongoose.model('Order', orderSchema);
+
+// User model
+export const User = mongoose.model('User', userSchema);
+
 export const connectDb = async () => {
   await mongoose.connect(MONGODB_URI);
   console.log('Connected to MongoDB with Mongoose');
@@ -125,9 +134,6 @@ export const initializeDb = async () => {
   }
 };
 
-// Product model
-export const Product = mongoose.model('Product', productSchema);
-
 // Products operations
 export const allProducts = async (filter = {}) => {
   return await Product.find(filter).sort({ created_at: -1 });
@@ -152,9 +158,6 @@ export const updateProduct = async (id, updates) => {
 export const deleteProduct = async (id) => {
   await Product.findByIdAndDelete(id);
 };
-
-// Order model
-export const Order = mongoose.model('Order', orderSchema);
 
 // Orders operations
 export const initializeOrderDb = async () => {
@@ -181,9 +184,6 @@ export const updateOrderStatus = async ({ id, status, payment_reference = null }
   }
   return await Order.findByIdAndUpdate(id, updateDoc, { new: true });
 };
-
-// User model
-export const User = mongoose.model('User', userSchema);
 
 // Users operations
 export const initializeUserDb = async () => {
