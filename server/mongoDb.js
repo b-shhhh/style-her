@@ -8,12 +8,13 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/styleh
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Product Schema
+// Product Schema with image as binary data
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   category: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: String, required: true }, // Base64 data URL
+  imageName: { type: String }, // Original image filename
   description: { type: String, default: 'A stylish product made for modern users.' },
   tags: [{ type: String }],
   created_at: { type: Date, default: Date.now }
@@ -90,12 +91,23 @@ const mapCategory = (productType) => {
   return categoryMap[productType] || productType.toLowerCase();
 };
 
-// Generate image URL based on image filename
-const generateImageUrl = (imageFilename) => {
-  if (imageFilename) {
-    return `/fashion_images_export/${imageFilename}`;
+// Read image file and convert to base64 data URL
+const getImageDataUrl = (imageFilename) => {
+  if (!imageFilename) {
+    return 'https://via.placeholder.com/900x600?text=Product';
   }
-  return 'https://via.placeholder.com/900x600?text=Product';
+  
+  const imagePath = path.join(__dirname, '..', 'fashion_images_export', imageFilename);
+  
+  try {
+    const imageBuffer = fs.readFileSync(imagePath);
+    const base64Data = imageBuffer.toString('base64');
+    const mimeType = imageFilename.endsWith('.png') ? 'image/png' : 'image/jpeg';
+    return `data:${mimeType};base64,${base64Data}`;
+  } catch (error) {
+    console.error(`Error reading image ${imageFilename}:`, error.message);
+    return 'https://via.placeholder.com/900x600?text=Product';
+  }
 };
 
 export const initializeDb = async () => {
@@ -118,7 +130,8 @@ export const initializeDb = async () => {
         name: productName || 'Unnamed Product',
         price: Number(price) || 0,
         category: mapCategory(category),
-        image: generateImageUrl(imageFilename),
+        image: getImageDataUrl(imageFilename),
+        imageName: imageFilename,
         description: description || 'A stylish product made for modern users.',
         tags: ['featured'],
         created_at: new Date().toISOString(),
@@ -127,7 +140,7 @@ export const initializeDb = async () => {
     
     if (products.length > 0) {
       await Product.insertMany(products);
-      console.log(`Imported ${products.length} products from fashion_dataset.csv`);
+      console.log(`Imported ${products.length} products from fashion_dataset.csv with images`);
     }
   } else {
     console.log('Products already exist in database');

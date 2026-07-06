@@ -358,8 +358,6 @@ app.delete('/api/auth/profile', async (req, res) => {
 app.use(express.static(rootDir));
 // Serve static files from dist
 app.use(express.static(clientDist));
-// Serve fashion images
-app.use('/fashion_images_export', express.static(path.join(rootDir, 'fashion_images_export')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });
