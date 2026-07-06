@@ -2,10 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct, initializeUserDb, createUser, getUserByEmail, getUserById, updateUser, deleteUser, getDb } from './mongoDb.js';
+import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct, initializeUserDb, createUser, getUserByEmail, getUserById, updateUser, deleteUser, Product } from './mongoDb.js';
 import { createOrder, getOrder, initializeOrderDb, listOrders, updateOrderStatus } from './mongoDb.js';
-import { ObjectId } from 'mongodb';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -46,8 +48,7 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/categories', async (req, res) => {
   try {
-    const db = getDb();
-    const categories = await db.collection('products').distinct('category');
+    const categories = await Product.distinct('category');
     res.json(categories);
   } catch (error) {
     console.error(error);
@@ -57,7 +58,7 @@ app.get('/api/categories', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
   try {
-    const product = await getProductById(new ObjectId(req.params.id));
+    const product = await getProductById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -104,7 +105,7 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   const { name, price, category, image, description, tags } = req.body;
   try {
-    const product = await getProductById(new ObjectId(req.params.id));
+    const product = await getProductById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -118,7 +119,7 @@ app.put('/api/products/:id', async (req, res) => {
       tags: tags ?? product.tags,
     };
 
-    const updated = await updateProduct(new ObjectId(req.params.id), updates);
+    const updated = await updateProduct(req.params.id, updates);
     res.json(updated);
   } catch (error) {
     console.error(error);
@@ -128,12 +129,12 @@ app.put('/api/products/:id', async (req, res) => {
 
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    const product = await getProductById(new ObjectId(req.params.id));
+    const product = await getProductById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    await deleteProduct(new ObjectId(req.params.id));
+    await deleteProduct(req.params.id);
     res.status(204).end();
   } catch (error) {
     console.error(error);
@@ -196,7 +197,7 @@ app.post('/api/payments/esewa/initiate', async (req, res) => {
   }
 
   try {
-    const order = await getOrder(new ObjectId(orderId));
+    const order = await getOrder(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
@@ -246,7 +247,7 @@ app.all('/api/payments/esewa/success', async (req, res) => {
   if (orderId) {
     try {
       await updateOrderStatus({
-        id: new ObjectId(orderId),
+        id: orderId,
         status: 'paid',
         payment_reference: paymentReference,
       });
@@ -263,7 +264,7 @@ app.all('/api/payments/esewa/failure', async (req, res) => {
 
   if (orderId) {
     try {
-      await updateOrderStatus({ id: new ObjectId(orderId), status: 'payment_failed' });
+      await updateOrderStatus({ id: orderId, status: 'payment_failed' });
     } catch (error) {
       console.error(error);
     }
@@ -322,11 +323,11 @@ app.put('/api/auth/profile', async (req, res) => {
   }
 
   try {
-    const user = await getUserById(new ObjectId(userId));
+    const user = await getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    const updated = await updateUser(new ObjectId(userId), { name, email, phone, address });
+    const updated = await updateUser(userId, { name, email, phone, address });
     res.json({ id: updated._id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address });
   } catch (error) {
     console.error(error);
@@ -341,11 +342,11 @@ app.delete('/api/auth/profile', async (req, res) => {
   }
 
   try {
-    const user = await getUserById(new ObjectId(userId));
+    const user = await getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    await deleteUser(new ObjectId(userId));
+    await deleteUser(userId);
     res.status(204).end();
   } catch (error) {
     console.error(error);
@@ -357,6 +358,8 @@ app.delete('/api/auth/profile', async (req, res) => {
 app.use(express.static(rootDir));
 // Serve static files from dist
 app.use(express.static(clientDist));
+// Serve fashion images
+app.use('/fashion_images_export', express.static(path.join(rootDir, 'fashion_images_export')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });

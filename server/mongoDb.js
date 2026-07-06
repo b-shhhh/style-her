@@ -1,191 +1,212 @@
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/styleher';
 
-const client = new MongoClient(MONGODB_URI);
-let db;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Product Schema
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  category: { type: String, required: true },
+  image: { type: String, required: true },
+  description: { type: String, default: 'A stylish product made for modern users.' },
+  tags: [{ type: String }],
+  created_at: { type: Date, default: Date.now }
+});
+
+// Order Schema
+const orderSchema = new mongoose.Schema({
+  items: [{ type: mongoose.Schema.Types.Mixed, required: true }],
+  total: { type: Number, required: true },
+  payment_method: { type: String, required: true },
+  status: { type: String, required: true },
+  payment_reference: { type: String },
+  created_at: { type: Date, default: Date.now }
+});
+
+// User Schema
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  image: { type: String, default: '/stylerher.jpg' },
+  phone: { type: String },
+  address: { type: String },
+  created_at: { type: Date, default: Date.now }
+});
 
 export const connectDb = async () => {
-  await client.connect();
-  db = client.db(); // Database is specified in the URI
-  console.log('Connected to MongoDB');
+  await mongoose.connect(MONGODB_URI);
+  console.log('Connected to MongoDB with Mongoose');
 };
 
-export const getDb = () => db;
+export const getDb = () => mongoose.connection;
+
+// Parse CSV line handling quoted fields
+const parseCsvLine = (line) => {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+};
+
+// Map product type to category
+const mapCategory = (productType) => {
+  const categoryMap = {
+    'Tops': 'top',
+    'Dress': 'dress',
+    'Dresses': 'dress',
+    'Ethnic Wear': 'ethnic-wear',
+    'Bottoms': 'bottom'
+  };
+  return categoryMap[productType] || productType.toLowerCase();
+};
+
+// Generate image URL based on image filename
+const generateImageUrl = (imageFilename) => {
+  if (imageFilename) {
+    return `/fashion_images_export/${imageFilename}`;
+  }
+  return 'https://via.placeholder.com/900x600?text=Product';
+};
 
 export const initializeDb = async () => {
-  const db = getDb();
-  
   // Check if products collection is empty
-  const count = await db.collection('products').countDocuments();
+  const count = await Product.countDocuments();
   
   if (count === 0) {
-    const seeds = [
-      {
-        name: 'Velvet Midi Dress',
-        price: 68,
-        category: 'dress',
-        image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80',
-        description: 'A feminine midi dress with soft velvet texture and a flattering silhouette.',
-        tags: ['new', 'limited'],
+    // Import from fashion_dataset.csv
+    const csvPath = path.join(__dirname, '..', 'fashion_dataset.csv');
+    const csvContent = fs.readFileSync(csvPath, 'utf8');
+    const lines = csvContent.trim().split('\n');
+    
+    // Skip header line
+    const dataLines = lines.slice(1);
+    
+    const products = dataLines.map(line => {
+      const [category, productName, price, description, imageFilename] = parseCsvLine(line);
+      
+      return {
+        name: productName || 'Unnamed Product',
+        price: Number(price) || 0,
+        category: mapCategory(category),
+        image: generateImageUrl(imageFilename),
+        description: description || 'A stylish product made for modern users.',
+        tags: ['featured'],
         created_at: new Date().toISOString(),
-      },
-      {
-        name: 'Embroidered Crop Top',
-        price: 45,
-        category: 'top',
-        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80',
-        description: 'A beautifully embroidered crop top perfect for layering.',
-        tags: ['bestseller'],
-        created_at: new Date().toISOString(),
-      },
-      {
-        name: 'Tailored Blazer',
-        price: 120,
-        category: 'top',
-        image: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=900&q=80',
-        description: 'A smart blazer crafted for structured, all-day tailoring.',
-        tags: ['classic', 'sale'],
-        created_at: new Date().toISOString(),
-      },
-      {
-        name: 'Saree with Blouse',
-        price: 89,
-        category: 'ethnic-wear',
-        image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=80',
-        description: 'Traditional saree with elegant embroidery and matching blouse.',
-        tags: ['new'],
-        created_at: new Date().toISOString(),
-      },
-      {
-        name: 'High Waist Denim',
-        price: 74,
-        category: 'bottom',
-        image: 'https://images.unsplash.com/photo-1542272604-787c62d465d1?auto=format&fit=crop&w=900&q=80',
-        description: 'Comfort stretch denim with a modern high-rise shape.',
-        tags: ['popular'],
-        created_at: new Date().toISOString(),
-      },
-    ];
-
-    await db.collection('products').insertMany(seeds);
-    console.log('Seeded products collection');
+      };
+    });
+    
+    if (products.length > 0) {
+      await Product.insertMany(products);
+      console.log(`Imported ${products.length} products from fashion_dataset.csv`);
+    }
+  } else {
+    console.log('Products already exist in database');
   }
 };
 
+// Product model
+export const Product = mongoose.model('Product', productSchema);
+
 // Products operations
 export const allProducts = async (filter = {}) => {
-  const db = getDb();
-  return await db.collection('products').find(filter).sort({ created_at: -1 }).toArray();
+  return await Product.find(filter).sort({ created_at: -1 });
 };
 
 export const getProductById = async (id) => {
-  const db = getDb();
-  return await db.collection('products').findOne({ _id: id });
+  return await Product.findById(id);
 };
 
 export const createProduct = async (product) => {
-  const db = getDb();
-  const result = await db.collection('products').insertOne({
+  const newProduct = new Product({
     ...product,
     created_at: new Date().toISOString(),
   });
-  return await getProductById(result.insertedId);
+  return await newProduct.save();
 };
 
 export const updateProduct = async (id, updates) => {
-  const db = getDb();
-  await db.collection('products').updateOne(
-    { _id: id },
-    { $set: updates }
-  );
-  return await getProductById(id);
+  return await Product.findByIdAndUpdate(id, updates, { new: true });
 };
 
 export const deleteProduct = async (id) => {
-  const db = getDb();
-  await db.collection('products').deleteOne({ _id: id });
+  await Product.findByIdAndDelete(id);
 };
+
+// Order model
+export const Order = mongoose.model('Order', orderSchema);
 
 // Orders operations
 export const initializeOrderDb = async () => {
-  // MongoDB creates collections automatically on first insert
   console.log('Orders collection ready');
 };
 
 export const createOrder = async ({ items, total, payment_method, status }) => {
-  const db = getDb();
-  const result = await db.collection('orders').insertOne({
-    items,
-    total,
-    payment_method,
-    status,
-    created_at: new Date().toISOString(),
-  });
-  return await getOrder(result.insertedId);
+  const order = new Order({ items, total, payment_method, status });
+  return await order.save();
 };
 
 export const getOrder = async (id) => {
-  const db = getDb();
-  return await db.collection('orders').findOne({ _id: id });
+  return await Order.findById(id);
 };
 
 export const listOrders = async () => {
-  const db = getDb();
-  return await db.collection('orders').find().sort({ created_at: -1 }).toArray();
+  return await Order.find().sort({ created_at: -1 });
 };
 
 export const updateOrderStatus = async ({ id, status, payment_reference = null }) => {
-  const db = getDb();
-  const updateDoc = { $set: { status } };
+  const updateDoc = { status };
   if (payment_reference) {
-    updateDoc.$set.payment_reference = payment_reference;
+    updateDoc.payment_reference = payment_reference;
   }
-  await db.collection('orders').updateOne(
-    { _id: id },
-    updateDoc
-  );
-  return await getOrder(id);
+  return await Order.findByIdAndUpdate(id, updateDoc, { new: true });
 };
+
+// User model
+export const User = mongoose.model('User', userSchema);
 
 // Users operations
 export const initializeUserDb = async () => {
-  // MongoDB creates collections automatically on first insert
   console.log('Users collection ready');
 };
 
 export const createUser = async ({ email, password, name, image }) => {
-  const db = getDb();
-  const result = await db.collection('users').insertOne({
-    email,
-    password,
-    name,
-    image: image || '/stylerher.jpg',
-    created_at: new Date().toISOString(),
-  });
-  return await getUserById(result.insertedId);
+  const user = new User({ email, password, name, image });
+  return await user.save();
 };
 
 export const getUserByEmail = async (email) => {
-  const db = getDb();
-  return await db.collection('users').findOne({ email });
+  return await User.findOne({ email });
 };
 
 export const getUserById = async (id) => {
-  const db = getDb();
-  return await db.collection('users').findOne({ _id: id });
+  return await User.findById(id);
 };
 
 export const updateUser = async (id, updates) => {
-  const db = getDb();
-  await db.collection('users').updateOne(
-    { _id: id },
-    { $set: updates }
-  );
-  return await getUserById(id);
+  return await User.findByIdAndUpdate(id, updates, { new: true });
 };
 
 export const deleteUser = async (id) => {
-  const db = getDb();
-  await db.collection('users').deleteOne({ _id: id });
+  await User.findByIdAndDelete(id);
 };

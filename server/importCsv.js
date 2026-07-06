@@ -40,56 +40,50 @@ const mapCategory = (productType) => {
   return categoryMap[productType] || productType.toLowerCase();
 };
 
-// Generate image URL based on product name
-const generateImageUrl = (name) => {
-  const seed = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  return `https://picsum.photos/seed/${seed}/500/650`;
+// Generate image URL based on image filename
+const generateImageUrl = (imageFilename) => {
+  if (imageFilename) {
+    return `/fashion_images_export/${imageFilename}`;
+  }
+  return 'https://via.placeholder.com/900x600?text=Product';
 };
 
 const importCsv = async () => {
-  const csvFiles = ['Tops.csv', 'Bottoms.csv', 'Dress.csv', 'EthnicWear.csv'];
+  const csvFile = 'fashion_dataset.csv';
   const allProducts = [];
 
-  for (const csvFile of csvFiles) {
-    const csvPath = path.join(__dirname, '..', csvFile);
-    const csvContent = fs.readFileSync(csvPath, 'utf8');
-    const lines = csvContent.trim().split('\n');
+  const csvPath = path.join(__dirname, '..', csvFile);
+  const csvContent = fs.readFileSync(csvPath, 'utf8');
+  const lines = csvContent.trim().split('\n');
+  
+  // Skip header line
+  const dataLines = lines.slice(1);
+  
+  const products = dataLines.map(line => {
+    const [category, productName, price, description, imageFilename] = parseCsvLine(line);
     
-    // Skip header line
-    const dataLines = lines.slice(1);
-    
-    const products = dataLines.map(line => {
-      const [brandName, details, sizes, mrp, sellPrice, discount, category, productType] = parseCsvLine(line);
-      
-      // Create product name from brand and details
-      const name = `${brandName} ${details}`.trim();
-      
-      // Use sellPrice as the price, fallback to MRP if sellPrice is empty
-      const price = sellPrice ? Number(sellPrice) : Number(mrp);
-      
-      return {
-        name,
-        price: price || 0,
-        category: mapCategory(productType),
-        image: generateImageUrl(name),
-        description: details,
-        tags: ['featured'],
-        created_at: new Date().toISOString(),
-      };
-    });
-    
-    allProducts.push(...products);
-  }
+    return {
+      name: productName || 'Unnamed Product',
+      price: Number(price) || 0,
+      category: mapCategory(category),
+      image: generateImageUrl(imageFilename),
+      description: description || 'A stylish product made for modern users.',
+      tags: ['featured'],
+      created_at: new Date().toISOString(),
+    };
+  });
+  
+  allProducts.push(...products);
 
   const db = getDb();
   
-  // Clear existing products
+  // Clear existing products and re-import
   await db.collection('products').deleteMany({});
   
   // Insert all products
   if (allProducts.length > 0) {
     await db.collection('products').insertMany(allProducts);
-    console.log(`Imported ${allProducts.length} products to MongoDB`);
+    console.log(`Re-imported ${allProducts.length} products from fashion_dataset.csv`);
   }
   
   process.exit(0);
