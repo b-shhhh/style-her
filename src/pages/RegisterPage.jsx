@@ -7,6 +7,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +32,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(email, password, name);
+      await register(email, password, name, null, phone);
       navigate('/home');
     } catch (err) {
       setError(err.message || 'Registration failed');
@@ -69,6 +70,17 @@ export default function RegisterPage() {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phone">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                placeholder="Your phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
             </div>
 

@@ -280,7 +280,7 @@ const rootDir = path.join(__dirname, '..');
 
 // Authentication API endpoints
 app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, phone } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ message: 'Email, password, and name are required' });
   }
@@ -290,8 +290,8 @@ app.post('/api/auth/register', async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'User already exists' });
     }
-    const user = await createUser({ email, password, name });
-    res.status(201).json({ id: user._id, email: user.email, name: user.name });
+    const user = await createUser({ email, password, name, phone });
+    res.status(201).json({ id: user._id, email: user.email, name: user.name, phone: user.phone });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to register user' });
@@ -309,7 +309,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    res.json({ id: user._id, email: user.email, name: user.name });
+    res.json({ id: user._id, email: user.email, name: user.name, phone: user.phone, address: user.address });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to login' });

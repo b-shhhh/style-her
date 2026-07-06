@@ -100,11 +100,15 @@ export default function CartPage() {
           <div className="cart-items">
             {items.map((item, index) => (
               <div key={item.id} className="cart-item">
-                <div className={`cart-art ${['blush', 'sand', 'lilac'][index % 3]}`}>IMG {index + 1}</div>
+                {item.image ? (
+                  <img src={item.image} alt={item.name} className="cart-item-image" style={{width: '82px', height: '82px', borderRadius: '6px', objectFit: 'cover'}} />
+                ) : (
+                  <div className={`cart-art ${['blush', 'sand', 'lilac'][index % 3]}`}>IMG {index + 1}</div>
+                )}
                 <div className="cart-item-copy">
                   <div>
-                    <h3>Product Description</h3>
-                    <p>Size: M · Color: {item.category}</p>
+                    <h3>{item.name}</h3>
+                    <p>{item.description || `Size: M · Color: ${item.category}`}</p>
                   </div>
                   <div className="cart-actions">
                     <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
@@ -115,20 +119,20 @@ export default function CartPage() {
                     Remove
                   </button>
                 </div>
-                <span className="cart-price">${(item.quantity * Number(item.price)).toFixed(2)}</span>
+                <span className="cart-price">₹{(item.quantity * Number(item.price)).toFixed(2)}</span>
               </div>
             ))}
           </div>
 
-          <div className="cart-footer">
+            <div className="cart-footer">
             <h3>Order Summary</h3>
             <div className="summary-line">
               <span>Items ({quantity})</span>
-              <span>${total.toFixed(2)}</span>
+              <span>₹{total.toFixed(2)}</span>
             </div>
             <div className="summary-line">
               <span>Discount</span>
-              <span>-$20.00</span>
+              <span>-₹20.00</span>
             </div>
             <div className="voucher-row">
               <input placeholder="Voucher code" />
@@ -136,7 +140,7 @@ export default function CartPage() {
             </div>
             <div className="summary-line total">
               <span>Total</span>
-              <span>${Math.max(0, total - 20).toFixed(2)}</span>
+              <span>₹{Math.max(0, total - 20).toFixed(2)}</span>
             </div>
 
             <div className="cart-footer-actions">

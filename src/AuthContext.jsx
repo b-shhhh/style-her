@@ -14,19 +14,19 @@ export function AuthProvider({ children }) {
     setIsLoading(false);
   }, []);
 
-  const register = async (email, password, name, image) => {
+  const register = async (email, password, name, image, phone) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name, image }),
+        body: JSON.stringify({ email, password, name, image, phone }),
       });
       if (!response.ok) {
         const result = await response.json();
         throw new Error(result.message || 'Registration failed');
       }
       const userData = await response.json();
-      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image };
+      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone };
       window.localStorage.setItem('styleher-user', JSON.stringify(user));
       setUser(user);
       return user;
