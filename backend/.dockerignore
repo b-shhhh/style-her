@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+*.md
+.env
+src/**/*.test.js
+src/**/*.spec.js
+jest.config.js
+coverage

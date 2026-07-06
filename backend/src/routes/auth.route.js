@@ -45,3 +45,42 @@ router.post('/login', async (req, res) => {
 
 // Update user profile
 router.put('/profile', async (req, res) => {
+  const { userId, name, email, phone, address } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const updated = await updateUserProfile(userId, { name, email, phone, address });
+    res.json(updated);
+  } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ message: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+// Delete user profile
+router.delete('/profile', async (req, res) => {
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    await deleteUserProfile(userId);
+    res.status(204).end();
+  } catch (error) {
+    if (error.message === 'User not found') {
+      return res.status(404).json({ message: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ message: 'Failed to delete profile' });
+  }
+});
+
+export default router;
