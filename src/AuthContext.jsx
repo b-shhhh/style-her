@@ -26,10 +26,10 @@ export function AuthProvider({ children }) {
         throw new Error(result.message || 'Registration failed');
       }
       const userData = await response.json();
-      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone };
-      window.localStorage.setItem('styleher-user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      const newUser = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone };
+      window.localStorage.setItem('styleher-user', JSON.stringify(newUser));
+      setUser(newUser);
+      return newUser;
     } catch (error) {
       throw error;
     }
@@ -47,10 +47,10 @@ export function AuthProvider({ children }) {
         throw new Error(result.message || 'Login failed');
       }
       const userData = await response.json();
-      const user = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone, address: userData.address };
-      window.localStorage.setItem('styleher-user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      const loggedUser = { id: userData._id || userData.id, email: userData.email, name: userData.name, image: userData.image, phone: userData.phone, address: userData.address };
+      window.localStorage.setItem('styleher-user', JSON.stringify(loggedUser));
+      setUser(loggedUser);
+      return loggedUser;
     } catch (error) {
       return null;
     }
@@ -74,10 +74,10 @@ export function AuthProvider({ children }) {
         throw new Error(result.message || 'Profile update failed');
       }
       const updated = await response.json();
-      const user = { id: updated._id || updated.id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address, image: updated.image };
-      window.localStorage.setItem('styleher-user', JSON.stringify(user));
-      setUser(user);
-      return user;
+      const updatedUser = { id: updated._id || updated.id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address, image: updated.image };
+      window.localStorage.setItem('styleher-user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return updatedUser;
     } catch (error) {
       throw error;
     }

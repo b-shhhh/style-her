@@ -5,14 +5,14 @@ const router = express.Router();
 
 // Register a new user
 router.post('/register', async (req, res) => {
-  const { email, password, name, phone } = req.body;
+  const { email, password, name, phone, image } = req.body;
   
   if (!email || !password || !name) {
     return res.status(400).json({ message: 'Email, password, and name are required' });
   }
 
   try {
-    const user = await registerUser({ email, password, name, phone });
+    const user = await registerUser({ email, password, name, phone, image });
     res.status(201).json(user);
   } catch (error) {
     if (error.message === 'User already exists') {
@@ -45,14 +45,14 @@ router.post('/login', async (req, res) => {
 
 // Update user profile
 router.put('/profile', async (req, res) => {
-  const { userId, name, email, phone, address } = req.body;
+  const { userId, name, email, phone, address, image } = req.body;
   
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }
 
   try {
-    const updated = await updateUserProfile(userId, { name, email, phone, address });
+    const updated = await updateUserProfile(userId, { name, email, phone, address, image });
     res.json(updated);
   } catch (error) {
     if (error.message === 'User not found') {

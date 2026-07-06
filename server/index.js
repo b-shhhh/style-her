@@ -18,8 +18,8 @@ const ESEWA_FORM_URL =
   process.env.ESEWA_FORM_URL || 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get('/api/products', async (req, res) => {
   const { search, category } = req.query;
@@ -280,7 +280,7 @@ const rootDir = path.join(__dirname, '..');
 
 // Authentication API endpoints
 app.post('/api/auth/register', async (req, res) => {
-  const { email, password, name, phone } = req.body;
+  const { email, password, name, phone, image } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ message: 'Email, password, and name are required' });
   }
@@ -290,8 +290,8 @@ app.post('/api/auth/register', async (req, res) => {
     if (existing) {
       return res.status(400).json({ message: 'User already exists' });
     }
-    const user = await createUser({ email, password, name, phone });
-    res.status(201).json({ id: user._id, email: user.email, name: user.name, phone: user.phone });
+    const user = await createUser({ email, password, name, phone, image });
+    res.status(201).json({ id: user._id, email: user.email, name: user.name, phone: user.phone, image: user.image });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to register user' });
@@ -309,7 +309,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    res.json({ id: user._id, email: user.email, name: user.name, phone: user.phone, address: user.address });
+    res.json({ id: user._id, email: user.email, name: user.name, phone: user.phone, address: user.address, image: user.image });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to login' });
@@ -317,7 +317,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.put('/api/auth/profile', async (req, res) => {
-  const { userId, name, email, phone, address } = req.body;
+  const { userId, name, email, phone, address, image } = req.body;
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }
@@ -327,8 +327,8 @@ app.put('/api/auth/profile', async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    const updated = await updateUser(userId, { name, email, phone, address });
-    res.json({ id: updated._id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address });
+    const updated = await updateUser(userId, { name, email, phone, address, image });
+    res.json({ id: updated._id, email: updated.email, name: updated.name, phone: updated.phone, address: updated.address, image: updated.image });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to update profile' });
