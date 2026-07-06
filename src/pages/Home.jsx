@@ -3,17 +3,19 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import HeroSection from '../components/HeroSection.jsx';
 
-const categoryLinks = [
-  { path: '/home', label: 'For You' },
-  { path: '/top', label: 'Tops' },
-  { path: '/bottom', label: 'Bottoms' },
-  { path: '/dress', label: 'Dresses' },
-  { path: '/ethnic-wear', label: 'Ethnic Wear' },
-];
+// Map category keys to display labels
+const categoryLabels = {
+  'top': 'Tops',
+  'bottom': 'Bottoms',
+  'dress': 'Dresses',
+  'ethnic-wear': 'Ethnic Wear'
+};
 
 export default function Home() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -30,8 +32,24 @@ export default function Home() {
     }
   };
 
+  const fetchCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Fetch failed');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories', error);
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const heroProduct = useMemo(() => products[0] || null, [products]);
@@ -43,11 +61,21 @@ export default function Home() {
       <main className="store-layout">
         <aside className="category-rail">
           <p>Categories</p>
-          {categoryLinks.map((category) => (
-            <Link key={category.path} to={category.path} className="category-rail-link">
-              {category.label}
-            </Link>
-          ))}
+          {loadingCategories ? (
+            <div className="status-message">Loading categories...</div>
+          ) : categories.length ? (
+            categories.map((category) => (
+              <Link
+                key={category}
+                to={`/${category}`}
+                className="category-rail-link"
+              >
+                {categoryLabels[category] || category}
+              </Link>
+            ))
+          ) : (
+            <div className="status-message">No categories available.</div>
+          )}
         </aside>
 
         <section className="products-overview">

@@ -1,14 +1,13 @@
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
-const DB_NAME = 'styleher';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/styleher';
 
 const client = new MongoClient(MONGODB_URI);
 let db;
 
 export const connectDb = async () => {
   await client.connect();
-  db = client.db(DB_NAME);
+  db = client.db(); // Database is specified in the URI
   console.log('Connected to MongoDB');
 };
 
@@ -184,4 +183,9 @@ export const updateUser = async (id, updates) => {
     { $set: updates }
   );
   return await getUserById(id);
+};
+
+export const deleteUser = async (id) => {
+  const db = getDb();
+  await db.collection('users').deleteOne({ _id: id });
 };

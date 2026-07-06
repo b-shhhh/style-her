@@ -83,8 +83,27 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const deleteProfile = async () => {
+    if (!user) return null;
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'Profile deletion failed');
+      }
+      window.localStorage.removeItem('styleher-user');
+      setUser(null);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, register, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading, register, login, logout, updateProfile, deleteProfile }}>
       {children}
     </AuthContext.Provider>
   );

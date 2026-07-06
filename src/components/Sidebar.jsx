@@ -1,16 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
+// Map category keys to display labels
+const categoryLabels = {
+  'top': 'Tops',
+  'bottom': 'Bottoms',
+  'dress': 'Dresses',
+  'ethnic-wear': 'Ethnic Wear'
+};
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    { id: 'home', label: 'For You', path: '/home' },
-    { id: 'dress', label: 'Dresses', path: '/dress' },
-    { id: 'top', label: 'Tops', path: '/top' },
-    { id: 'bottom', label: 'Bottoms', path: '/bottom' },
-    { id: 'ethnic-wear', label: 'Ethnic Wear', path: '/ethnic-wear' },
-  ];
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Fetch failed');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories', error);
+      setCategories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   return (
     <>
@@ -31,16 +52,22 @@ export default function Sidebar() {
         </div>
 
         <nav className="category-list">
-          {categories.map((cat) => (
-            <Link
-              key={cat.id}
-              to={cat.path}
-              className="category-link"
-              onClick={() => setIsOpen(false)}
-            >
-              {cat.label}
-            </Link>
-          ))}
+          {loading ? (
+            <div className="status-message">Loading...</div>
+          ) : categories.length ? (
+            categories.map((cat) => (
+              <Link
+                key={cat}
+                to={`/${cat}`}
+                className="category-link"
+                onClick={() => setIsOpen(false)}
+              >
+                {categoryLabels[cat] || cat}
+              </Link>
+            ))
+          ) : (
+            <div className="status-message">No categories</div>
+          )}
         </nav>
       </aside>
 

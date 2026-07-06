@@ -4,14 +4,14 @@ import { useAuth } from '../AuthContext.jsx';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, updateProfile, deleteProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
-  const [image, setImage] = useState(user?.image || '/stylerher.jpg');
-  const [imagePreview, setImagePreview] = useState(user?.image || '/stylerher.jpg');
+  const [image, setImage] = useState(user?.image || null);
+  const [imagePreview, setImagePreview] = useState(user?.image || null);
 
   if (!user) {
     navigate('/login');
@@ -45,22 +45,44 @@ export default function ProfilePage() {
     navigate('/');
   };
 
+  const handleDeleteProfile = async () => {
+    if (window.confirm('Are you sure you want to delete your profile? This action cannot be undone.')) {
+      try {
+        await deleteProfile();
+        navigate('/');
+      } catch (err) {
+        console.error('Failed to delete profile:', err);
+      }
+    }
+  };
+
   return (
     <div className="profile-page">
       <div className="profile-container">
         <div className="profile-card">
           <div className="profile-header">
             <h1>My Profile</h1>
-            <button onClick={handleLogout} className="logout-button">
-              Logout
-            </button>
+            <div className="profile-actions">
+              <button onClick={handleLogout} className="logout-button">
+                Logout
+              </button>
+              <button onClick={handleDeleteProfile} className="delete-profile-button">
+                Delete Profile
+              </button>
+            </div>
           </div>
 
           <div className="profile-content">
             {!isEditing ? (
               <>
                 <div className="profile-image-section">
-                  <img src={user?.image || '/stylerher.jpg'} alt="Profile" className="profile-image" />
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Profile" className="profile-image" />
+                  ) : (
+                    <div className="profile-image-placeholder">
+                      <span className="placeholder-icon">👤</span>
+                    </div>
+                  )}
                 </div>
                 <div className="profile-info">
                   <div className="info-row">
@@ -87,7 +109,13 @@ export default function ProfilePage() {
             ) : (
               <>
                 <div className="profile-image-section">
-                  <img src={imagePreview} alt="Profile" className="profile-image" />
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Profile" className="profile-image" />
+                  ) : (
+                    <div className="profile-image-placeholder">
+                      <span className="placeholder-icon">👤</span>
+                    </div>
+                  )}
                   <label className="image-upload-label">
                     Change Photo
                     <input type="file" accept="image/*" onChange={handleImageChange} />

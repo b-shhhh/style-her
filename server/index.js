@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct, initializeUserDb, createUser, getUserByEmail, getUserById, updateUser } from './mongoDb.js';
+import { connectDb, initializeDb, allProducts, getProductById, createProduct, updateProduct, deleteProduct, initializeUserDb, createUser, getUserByEmail, getUserById, updateUser, deleteUser, getDb } from './mongoDb.js';
 import { createOrder, getOrder, initializeOrderDb, listOrders, updateOrderStatus } from './mongoDb.js';
 import { ObjectId } from 'mongodb';
 
@@ -41,6 +41,17 @@ app.get('/api/products', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to load products' });
+  }
+});
+
+app.get('/api/categories', async (req, res) => {
+  try {
+    const db = getDb();
+    const categories = await db.collection('products').distinct('category');
+    res.json(categories);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to load categories' });
   }
 });
 
@@ -320,6 +331,25 @@ app.put('/api/auth/profile', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
+app.delete('/api/auth/profile', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const user = await getUserById(new ObjectId(userId));
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    await deleteUser(new ObjectId(userId));
+    res.status(204).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to delete profile' });
   }
 });
 
