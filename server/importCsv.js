@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/styleher';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/styleher';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +26,7 @@ const productSchema = new mongoose.Schema({
 // Product model
 const Product = mongoose.model('Product', productSchema);
 
-// Parse CSV line handling quoted fields
+// Parse CSV line handling quoted fields and trim whitespace
 const parseCsvLine = (line) => {
   const result = [];
   let current = '';
@@ -38,13 +38,13 @@ const parseCsvLine = (line) => {
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
-      result.push(current);
+      result.push(current.trim());
       current = '';
     } else {
       current += char;
     }
   }
-  result.push(current);
+  result.push(current.trim());
   return result;
 };
 

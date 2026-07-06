@@ -80,6 +80,10 @@ button {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.red-text {
+  color: #ff6b9d !important;
+}
+
 .splash-hero {
   padding: 2rem;
 }

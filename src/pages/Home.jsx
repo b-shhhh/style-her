@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 import HeroSection from '../components/HeroSection.jsx';
 
+// Fixed categories for the homepage
+const fixedCategories = ['top', 'bottom', 'dress', 'ethnic-wear'];
+
 // Map category keys to display labels
 const categoryLabels = {
   'top': 'Tops',
@@ -13,9 +16,7 @@ const categoryLabels = {
 
 export default function Home() {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -32,24 +33,8 @@ export default function Home() {
     }
   };
 
-  const fetchCategories = async () => {
-    setLoadingCategories(true);
-    try {
-      const response = await fetch('/api/categories');
-      if (!response.ok) throw new Error('Fetch failed');
-      const data = await response.json();
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to load categories', error);
-      setCategories([]);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
   useEffect(() => {
     fetchProducts();
-    fetchCategories();
   }, []);
 
   const heroProduct = useMemo(() => products[0] || null, [products]);
@@ -61,21 +46,15 @@ export default function Home() {
       <main className="store-layout">
         <aside className="category-rail">
           <p>Categories</p>
-          {loadingCategories ? (
-            <div className="status-message">Loading categories...</div>
-          ) : categories.length ? (
-            categories.map((category) => (
-              <Link
-                key={category}
-                to={`/${category}`}
-                className="category-rail-link"
-              >
-                {categoryLabels[category] || category}
-              </Link>
-            ))
-          ) : (
-            <div className="status-message">No categories available.</div>
-          )}
+          {fixedCategories.map((category) => (
+            <Link
+              key={category}
+              to={`/${category}`}
+              className="category-rail-link"
+            >
+              {categoryLabels[category]}
+            </Link>
+          ))}
         </aside>
 
         <section className="products-overview">

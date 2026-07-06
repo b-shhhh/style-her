@@ -4,8 +4,8 @@ const tileClasses = ['blush', 'sand', 'lilac', 'ochre', 'clay', 'sage', 'rose', 
 
 export default function ProductCard({ product }) {
   // MongoDB uses _id, convert to string for display
-  const productId = product._id || product.id;
-  const tileClass = tileClasses[(Number(productId) - 1) % tileClasses.length];
+  const productId = product._id ? product._id.toString() : product.id;
+  const tileClass = tileClasses[Math.abs(productId.split('').reduce((a, b) => a + b.charCodeAt(0), 0) - 1) % tileClasses.length];
 
   return (
     <Link to={`/product/${productId}`} className="product-card">
@@ -13,7 +13,7 @@ export default function ProductCard({ product }) {
       <div className="product-card-content">
         <h3>{product.name}</h3>
         <p>{product.description}</p>
-        <span className="product-price">${Number(product.price).toFixed(2)}</span>
+        <span className="product-price">₹{Number(product.price).toFixed(2)}</span>
         <span className="add-dot">+</span>
       </div>
     </Link>

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard.jsx';
 
+// Fixed categories for the category page
+const fixedCategories = ['top', 'bottom', 'dress', 'ethnic-wear'];
+
 // Map category keys to display labels
 const categoryLabels = {
   'top': 'Tops',
@@ -12,9 +15,7 @@ const categoryLabels = {
 
 export default function CategoryPage({ category, title }) {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -32,23 +33,7 @@ export default function CategoryPage({ category, title }) {
       }
     };
 
-    const fetchCategories = async () => {
-      setLoadingCategories(true);
-      try {
-        const response = await fetch('/api/categories');
-        if (!response.ok) throw new Error('Fetch failed');
-        const data = await response.json();
-        setCategories(data);
-      } catch (error) {
-        console.error('Failed to load categories', error);
-        setCategories([]);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-
     fetchProducts();
-    fetchCategories();
   }, [category]);
 
   return (
@@ -56,21 +41,15 @@ export default function CategoryPage({ category, title }) {
       <main className="store-layout">
         <aside className="category-rail">
           <p>Categories</p>
-          {loadingCategories ? (
-            <div className="status-message">Loading categories...</div>
-          ) : categories.length ? (
-            categories.map((cat) => (
-              <Link
-                key={cat}
-                to={`/${cat}`}
-                className={`category-rail-link ${cat === category ? 'active' : ''}`}
-              >
-                {categoryLabels[cat] || cat}
-              </Link>
-            ))
-          ) : (
-            <div className="status-message">No categories available.</div>
-          )}
+          {fixedCategories.map((cat) => (
+            <Link
+              key={cat}
+              to={`/${cat}`}
+              className={`category-rail-link ${cat === category ? 'active' : ''}`}
+            >
+              {categoryLabels[cat]}
+            </Link>
+          ))}
         </aside>
 
         <section className="products-overview">
@@ -83,7 +62,7 @@ export default function CategoryPage({ category, title }) {
             <div className="status-message">Loading products...</div>
           ) : products.length ? (
             <div className="product-grid figma-grid-large">
-              {products.concat(products).slice(0, 8).map((product, index) => (
+              {products.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>

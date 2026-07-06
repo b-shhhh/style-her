@@ -1,28 +1,55 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext.jsx';
+import { useEffect, useState } from 'react';
+import ProductCard from '../components/ProductCard.jsx';
 
-const previewProducts = [
-  { id: 1, price: 42, name: 'Rose Wrap Top' },
-  { id: 2, price: 58, name: 'Linen Wide Pants' },
-  { id: 3, price: 76, name: 'Two Silk Dress' },
-  { id: 4, price: 64, name: 'Embroidered Kurta' },
-];
+// Fixed categories for the splash page
+const fixedCategories = ['top', 'bottom', 'dress', 'ethnic-wear'];
+
+// Map category keys to display labels
+const categoryLabels = {
+  'top': 'Tops',
+  'bottom': 'Bottoms',
+  'dress': 'Dresses',
+  'ethnic-wear': 'Ethnic Wear'
+};
 
 export default function SplashPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const openShop = () => {
     navigate(user ? '/home' : '/login');
   };
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/products');
+        if (!response.ok) throw new Error('Fetch failed');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Failed to load products', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="splash-page">
       <header className="splash-topbar">
-        <div className="brand-title">Style Her</div>
+        <div className="brand-title red-text">Style Her</div>
         <nav>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
+          <Link to="/login" className="red-text">Login</Link>
+          <Link to="/register" className="red-text">Register</Link>
         </nav>
       </header>
 
@@ -42,12 +69,15 @@ export default function SplashPage() {
       <main className="store-layout splash-store">
         <aside className="category-rail">
           <p>Categories</p>
-          <span className="category-rail-link active">All Products</span>
-          <span className="category-rail-link">For You</span>
-          <span className="category-rail-link">Tops</span>
-          <span className="category-rail-link">Bottoms</span>
-          <span className="category-rail-link">Dresses</span>
-          <span className="category-rail-link">Ethnic Wear</span>
+          {fixedCategories.map((category) => (
+            <Link
+              key={category}
+              to={`/${category}`}
+              className="category-rail-link"
+            >
+              {categoryLabels[category]}
+            </Link>
+          ))}
         </aside>
 
         <section className="products-overview">
@@ -55,22 +85,17 @@ export default function SplashPage() {
             <h2>Products</h2>
             <span className="product-count">View all +</span>
           </div>
-          <div className="product-grid">
-            {previewProducts.map((product) => (
-              <div key={product.id} className="product-card">
-                <div className={`product-art ${['blush', 'sand', 'lilac', 'ochre'][product.id - 1]}`}>
-                  IMG {product.id}
-                  <span className="heart-dot">♡</span>
-                </div>
-                <div className="product-card-content">
-                  <h3>Product Name</h3>
-                  <p>{product.name}</p>
-                  <span className="product-price">${product.price.toFixed(2)}</span>
-                  <span className="add-dot">+</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="status-message">Loading products...</div>
+          ) : products.length ? (
+            <div className="product-grid">
+              {products.slice(0, 8).map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="status-message">No products available.</div>
+          )}
         </section>
       </main>
 

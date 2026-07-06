@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/styleher';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/styleher';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +57,7 @@ export const connectDb = async () => {
 
 export const getDb = () => mongoose.connection;
 
-// Parse CSV line handling quoted fields
+// Parse CSV line handling quoted fields and trim whitespace
 const parseCsvLine = (line) => {
   const result = [];
   let current = '';
@@ -69,13 +69,13 @@ const parseCsvLine = (line) => {
     if (char === '"') {
       inQuotes = !inQuotes;
     } else if (char === ',' && !inQuotes) {
-      result.push(current);
+      result.push(current.trim());
       current = '';
     } else {
       current += char;
     }
   }
-  result.push(current);
+  result.push(current.trim());
   return result;
 };
 
